@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>学习笔记 | Personal Blog</title>
+    <meta name="description" content="一个用于记录学习笔记、技术理解和个人思考的静态个人博客。">
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#home" aria-label="回到首页">
+        <span class="brand-mark">N</span>
+        <span>学习笔记</span>
+      </a>
+      <nav class="top-nav" aria-label="主导航">
+        <a href="#posts">文章</a>
+        <a href="#about">关于</a>
+        <button class="icon-button" id="themeToggle" type="button" title="切换主题" aria-label="切换主题">
+          <span class="sun-icon" aria-hidden="true"></span>
+        </button>
+        <button class="primary-button" id="openEditor" type="button">编辑</button>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" id="home">
+        <img src="./assets/hero-study.png" alt="" class="hero-image">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <p class="eyebrow">Learning Notes</p>
+          <h1>把每天学到的东西，整理成真正属于自己的知识。</h1>
+          <p class="hero-copy">这里适合记录 vLLM、Python、系统设计、论文阅读和项目复盘。先写下来，再慢慢变清楚。</p>
+          <div class="hero-actions">
+            <a class="primary-button" href="#posts">阅读笔记</a>
+            <button class="secondary-button" id="heroEditor" type="button">写一篇</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-band" id="posts">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Archive</p>
+            <h2>最近记录</h2>
+          </div>
+          <div class="search-box">
+            <span class="search-icon" aria-hidden="true"></span>
+            <input id="searchInput" type="search" placeholder="搜索标题、标签或内容" autocomplete="off">
+          </div>
+        </div>
+        <div class="tag-row" id="tagRow" aria-label="文章标签"></div>
+        <div class="post-grid" id="postList"></div>
+      </section>
+
+      <section class="reader-band" id="reader" hidden>
+        <article class="reader" id="readerArticle"></article>
+      </section>
+
+      <section class="content-band about" id="about">
+        <div class="about-copy">
+          <p class="eyebrow">About</p>
+          <h2>这个博客的用途</h2>
+          <p>它是一个轻量的个人学习空间。你可以把知识点、实验过程、踩坑记录和阶段性总结写成文章，部署到公网后分享给别人。</p>
+        </div>
+        <div class="about-panel">
+          <div>
+            <strong>静态运行</strong>
+            <p>不依赖数据库和后端，适合 GitHub Pages、Cloudflare Pages、Netlify。</p>
+          </div>
+          <div>
+            <strong>本地编辑</strong>
+            <p>浏览器内编辑先保存到本机，导出后替换数据文件即可公开更新。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="editor-dialog" id="editorDialog">
+      <form class="editor" method="dialog">
+        <div class="editor-head">
+          <div>
+            <p class="eyebrow">Local Editor</p>
+            <h2>编辑文章</h2>
+          </div>
+          <button class="icon-button" value="cancel" type="submit" title="关闭" aria-label="关闭">
+            <span class="close-icon" aria-hidden="true"></span>
+          </button>
+        </div>
+        <p class="editor-note">静态站没有数据库。这里的保存只写入当前浏览器；想让别人看到更新，请导出数据并替换 `posts.js` 后重新发布。</p>
+        <div class="editor-layout">
+          <aside class="draft-list" id="draftList" aria-label="文章草稿列表"></aside>
+          <section class="editor-fields">
+            <input id="postTitle" type="text" placeholder="标题">
+            <div class="field-grid">
+              <input id="postDate" type="date">
+              <input id="postTags" type="text" placeholder="标签，用英文逗号分隔">
+            </div>
+            <textarea id="postExcerpt" rows="3" placeholder="摘要"></textarea>
+            <textarea id="postContent" rows="12" placeholder="正文。支持简单 Markdown：# 标题、## 小标题、- 列表、```代码块```"></textarea>
+            <div class="editor-actions">
+              <button class="secondary-button" id="newPost" type="button">新建</button>
+              <button class="secondary-button" id="deletePost" type="button">删除</button>
+              <button class="secondary-button" id="importPosts" type="button">导入</button>
+              <button class="secondary-button" id="exportPosts" type="button">导出</button>
+              <button class="primary-button" id="savePost" type="button">保存</button>
+            </div>
+            <textarea id="importBox" rows="5" placeholder="粘贴 JSON 数组后点击导入" hidden></textarea>
+          </section>
+        </div>
+      </form>
+    </dialog>
+
+    <footer class="site-footer">
+      <span>Personal learning blog</span>
+      <a href="#home">回到顶部</a>
+    </footer>
+
+    <script src="./posts.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
