@@ -1,8 +1,12 @@
 (function () {
   const storageKey = "personal-blog-posts";
   const themeKey = "personal-blog-theme";
+  const profile = window.SITE_PROFILE || {};
+  const researchInterests = window.RESEARCH_INTERESTS || [];
+  const resources = window.RESOURCE_LIBRARY || [];
   let posts = loadPosts();
   let activeTag = "全部";
+  let activeResourceType = "全部";
   let activeId = posts[0]?.id || null;
 
   const postList = document.getElementById("postList");
@@ -54,8 +58,9 @@
   function bindEvents() {
     searchInput.addEventListener("input", renderPosts);
     document.getElementById("openEditor").addEventListener("click", openEditor);
-    document.getElementById("heroEditor").addEventListener("click", openEditor);
+    document.getElementById("contactEditor").addEventListener("click", openEditor);
     document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+    document.getElementById("printResume").addEventListener("click", () => window.print());
     document.getElementById("newPost").addEventListener("click", createPost);
     document.getElementById("deletePost").addEventListener("click", deletePost);
     document.getElementById("savePost").addEventListener("click", savePost);
@@ -64,9 +69,90 @@
   }
 
   function render() {
+    renderProfile();
+    renderMetrics();
+    renderResume();
+    renderResearch();
+    renderResources();
     renderTags();
     renderPosts();
     renderReader(posts[0]);
+  }
+
+  function renderProfile() {
+    document.getElementById("profileHeadline").textContent = profile.headline || "";
+    document.getElementById("profileTitle").textContent = profile.role || profile.name || "";
+    document.getElementById("profileSummary").textContent = profile.summary || "";
+    document.getElementById("profileLinks").innerHTML = (profile.links || []).map((link) => `
+      <a class="pill-link" href="${escapeAttr(link.url)}" target="_blank" rel="noreferrer">${escapeHtml(link.label)}</a>
+    `).join("");
+    document.getElementById("focusList").innerHTML = `
+      <h3>近期关注</h3>
+      ${(profile.focus || []).map((item) => `<p>${escapeHtml(item)}</p>`).join("")}
+    `;
+  }
+
+  function renderMetrics() {
+    document.getElementById("metricRow").innerHTML = (profile.metrics || []).map((metric) => `
+      <div class="metric-item">
+        <strong>${escapeHtml(metric.value)}</strong>
+        <span>${escapeHtml(metric.label)}</span>
+      </div>
+    `).join("");
+  }
+
+  function renderResume() {
+    document.getElementById("resumeTimeline").innerHTML = (profile.resume || []).map((item) => `
+      <article class="timeline-item">
+        <span>${escapeHtml(item.period)}</span>
+        <h3>${escapeHtml(item.title)}</h3>
+        <p>${escapeHtml(item.detail)}</p>
+      </article>
+    `).join("");
+
+    document.getElementById("skillPanel").innerHTML = (profile.skills || []).map((group) => `
+      <section class="skill-group">
+        <h3>${escapeHtml(group.group)}</h3>
+        <div class="skill-tags">${group.items.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>
+      </section>
+    `).join("");
+  }
+
+  function renderResearch() {
+    document.getElementById("researchGrid").innerHTML = researchInterests.map((item) => `
+      <article class="research-card">
+        <div class="mini-tags">${item.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div>
+        <h3>${escapeHtml(item.title)}</h3>
+        <p>${escapeHtml(item.description)}</p>
+        <a class="read-button" href="${escapeAttr(item.link)}" target="_blank" rel="noreferrer">相关入口</a>
+      </article>
+    `).join("");
+  }
+
+  function renderResources() {
+    const types = ["全部", ...new Set(resources.map((item) => item.type))];
+    document.getElementById("resourceFilters").innerHTML = types.map((type) => `
+      <button class="tag-button ${type === activeResourceType ? "is-active" : ""}" type="button" data-type="${escapeAttr(type)}">${escapeHtml(type)}</button>
+    `).join("");
+    document.querySelectorAll("#resourceFilters button").forEach((button) => {
+      button.addEventListener("click", () => {
+        activeResourceType = button.dataset.type;
+        renderResources();
+      });
+    });
+
+    const filtered = resources.filter((item) => activeResourceType === "全部" || item.type === activeResourceType);
+    document.getElementById("resourceGrid").innerHTML = filtered.map((item) => `
+      <article class="resource-card">
+        <div class="resource-meta">
+          <span>${escapeHtml(item.type)}</span>
+          <span>${escapeHtml(item.topic)}</span>
+        </div>
+        <h3>${escapeHtml(item.title)}</h3>
+        <p>${escapeHtml(item.description)}</p>
+        <a class="read-button" href="${escapeAttr(item.url)}" target="_blank" rel="noreferrer">打开资料</a>
+      </article>
+    `).join("");
   }
 
   function renderTags() {

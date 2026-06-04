@@ -3,23 +3,27 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>学习笔记 | Personal Blog</title>
-    <meta name="description" content="一个用于记录学习笔记、技术理解和个人思考的静态个人博客。">
+    <title>Futuresxy | Personal Site</title>
+    <meta name="description" content="Futuresxy 的个人主页：简历、GitHub、学习笔记、研究方向和高质量资料收藏。">
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
     <header class="site-header">
       <a class="brand" href="#home" aria-label="回到首页">
-        <span class="brand-mark">N</span>
-        <span>学习笔记</span>
+        <span class="brand-mark">F</span>
+        <span>Futuresxy</span>
       </a>
       <nav class="top-nav" aria-label="主导航">
-        <a href="#posts">文章</a>
-        <a href="#about">关于</a>
+        <a href="#resume">简历</a>
+        <a href="#research">研究方向</a>
+        <a href="#posts">学习笔记</a>
+        <a href="#resources">资料库</a>
+        <a href="https://futuresxy.github.io/paper-daily/" target="_blank" rel="noreferrer">Paper Daily</a>
+        <a class="github-link" href="https://github.com/Futuresxy" target="_blank" rel="noreferrer">GitHub</a>
         <button class="icon-button" id="themeToggle" type="button" title="切换主题" aria-label="切换主题">
           <span class="sun-icon" aria-hidden="true"></span>
         </button>
-        <button class="primary-button" id="openEditor" type="button">编辑</button>
+        <button class="primary-button" id="openEditor" type="button">写笔记</button>
       </nav>
     </header>
 
@@ -28,21 +32,77 @@
         <img src="./assets/hero-study.png" alt="" class="hero-image">
         <div class="hero-overlay"></div>
         <div class="hero-content">
-          <p class="eyebrow">Learning Notes</p>
-          <h1>把每天学到的东西，整理成真正属于自己的知识。</h1>
-          <p class="hero-copy">这里适合记录 vLLM、Python、系统设计、论文阅读和项目复盘。先写下来，再慢慢变清楚。</p>
+          <p class="eyebrow">Personal Site</p>
+          <h1>Futuresxy</h1>
+          <p class="hero-copy" id="profileHeadline">记录 LLM 推理系统、Python 工程和论文阅读中的学习过程。</p>
           <div class="hero-actions">
-            <a class="primary-button" href="#posts">阅读笔记</a>
-            <button class="secondary-button" id="heroEditor" type="button">写一篇</button>
+            <a class="primary-button" href="https://github.com/Futuresxy" target="_blank" rel="noreferrer">GitHub 主页</a>
+            <a class="secondary-button" href="#resume">查看简历</a>
+            <a class="secondary-button" href="https://futuresxy.github.io/paper-daily/" target="_blank" rel="noreferrer">Paper Daily</a>
           </div>
         </div>
+      </section>
+
+      <section class="overview-band">
+        <div class="metric-row" id="metricRow"></div>
+      </section>
+
+      <section class="content-band profile-section" id="profile">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Profile</p>
+            <h2>个人展示</h2>
+          </div>
+          <a class="secondary-button" href="https://github.com/Futuresxy" target="_blank" rel="noreferrer">github.com/Futuresxy</a>
+        </div>
+        <div class="profile-grid">
+          <article class="profile-intro">
+            <h3 id="profileTitle">LLM 推理系统学习者</h3>
+            <p id="profileSummary"></p>
+            <div class="link-row" id="profileLinks"></div>
+          </article>
+          <aside class="focus-list" id="focusList"></aside>
+        </div>
+      </section>
+
+      <section class="content-band" id="resume">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Resume</p>
+            <h2>简历概览</h2>
+          </div>
+          <button class="secondary-button" id="printResume" type="button">打印 / 导出 PDF</button>
+        </div>
+        <div class="resume-layout">
+          <div class="timeline" id="resumeTimeline"></div>
+          <div class="skill-panel" id="skillPanel"></div>
+        </div>
+      </section>
+
+      <section class="content-band" id="research">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Research</p>
+            <h2>感兴趣的研究方向</h2>
+          </div>
+          <a class="primary-button" href="https://futuresxy.github.io/paper-daily/" target="_blank" rel="noreferrer">打开 Paper Daily</a>
+        </div>
+        <div class="research-grid" id="researchGrid"></div>
+        <article class="paper-daily">
+          <div>
+            <p class="eyebrow">Daily Papers</p>
+            <h3>每天跟踪论文更新</h3>
+            <p>我把每天拉取论文的页面放在这里，作为研究方向页面的入口。后续可以把读过的论文整理成笔记，再沉淀到本站的学习笔记和资料库中。</p>
+          </div>
+          <a class="secondary-button" href="https://futuresxy.github.io/paper-daily/" target="_blank" rel="noreferrer">https://futuresxy.github.io/paper-daily/</a>
+        </article>
       </section>
 
       <section class="content-band" id="posts">
         <div class="section-head">
           <div>
-            <p class="eyebrow">Archive</p>
-            <h2>最近记录</h2>
+            <p class="eyebrow">Notes</p>
+            <h2>学习笔记</h2>
           </div>
           <div class="search-box">
             <span class="search-icon" aria-hidden="true"></span>
@@ -57,21 +117,26 @@
         <article class="reader" id="readerArticle"></article>
       </section>
 
-      <section class="content-band about" id="about">
-        <div class="about-copy">
-          <p class="eyebrow">About</p>
-          <h2>这个博客的用途</h2>
-          <p>它是一个轻量的个人学习空间。你可以把知识点、实验过程、踩坑记录和阶段性总结写成文章，部署到公网后分享给别人。</p>
+      <section class="content-band" id="resources">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Resources</p>
+            <h2>高质量资料库</h2>
+          </div>
+          <div class="resource-filters" id="resourceFilters"></div>
         </div>
-        <div class="about-panel">
-          <div>
-            <strong>静态运行</strong>
-            <p>不依赖数据库和后端，适合 GitHub Pages、Cloudflare Pages、Netlify。</p>
-          </div>
-          <div>
-            <strong>本地编辑</strong>
-            <p>浏览器内编辑先保存到本机，导出后替换数据文件即可公开更新。</p>
-          </div>
+        <div class="resource-grid" id="resourceGrid"></div>
+      </section>
+
+      <section class="content-band contact-section" id="contact">
+        <div>
+          <p class="eyebrow">Contact</p>
+          <h2>持续更新的个人学习空间</h2>
+          <p>这个站点用于公开展示我的学习过程、研究兴趣和项目积累。内容会随着 GitHub 仓库提交自动发布到 GitHub Pages。</p>
+        </div>
+        <div class="contact-actions">
+          <a class="primary-button" href="https://github.com/Futuresxy" target="_blank" rel="noreferrer">访问 GitHub</a>
+          <button class="secondary-button" id="contactEditor" type="button">新增笔记</button>
         </div>
       </section>
     </main>
@@ -81,13 +146,12 @@
         <div class="editor-head">
           <div>
             <p class="eyebrow">Local Editor</p>
-            <h2>编辑文章</h2>
+            <h2>编辑学习笔记</h2>
           </div>
           <button class="icon-button" value="cancel" type="submit" title="关闭" aria-label="关闭">
             <span class="close-icon" aria-hidden="true"></span>
           </button>
         </div>
-        <p class="editor-note">静态站没有数据库。这里的保存只写入当前浏览器；想让别人看到更新，请导出数据并替换 `posts.js` 后重新发布。</p>
         <div class="editor-layout">
           <aside class="draft-list" id="draftList" aria-label="文章草稿列表"></aside>
           <section class="editor-fields">
@@ -112,8 +176,11 @@
     </dialog>
 
     <footer class="site-footer">
-      <span>Personal learning blog</span>
-      <a href="#home">回到顶部</a>
+      <span>Futuresxy Personal Site</span>
+      <div>
+        <a href="https://github.com/Futuresxy" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="#home">回到顶部</a>
+      </div>
     </footer>
 
     <script src="./posts.js"></script>
