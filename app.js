@@ -1,13 +1,20 @@
 (function () {
   const storageKey = "personal-blog-posts";
+  const taskStateKey = "personal-blog-task-state";
+  const reflectionKey = "personal-blog-reflections";
   const themeKey = "personal-blog-theme";
   const profile = window.SITE_PROFILE || {};
   const researchInterests = window.RESEARCH_INTERESTS || [];
   const resources = window.RESOURCE_LIBRARY || [];
+  const progressBoard = window.PROGRESS_BOARD || { tracks: [], milestones: [], dailyPlans: [] };
   let posts = loadPosts();
   let activeTag = "全部";
   let activeResourceType = "全部";
   let activeId = posts[0]?.id || null;
+  let taskState = loadTaskState();
+  let reflections = loadReflections();
+  let selectedPlanDate = resolveInitialPlanDate(progressBoard.dailyPlans || []);
+  let activeProgressTrack = "全部";
 
   const postList = document.getElementById("postList");
   const tagRow = document.getElementById("tagRow");
@@ -16,6 +23,19 @@
   const readerArticle = document.getElementById("readerArticle");
   const editorDialog = document.getElementById("editorDialog");
   const draftList = document.getElementById("draftList");
+  const progressEls = {
+    dailyPlanSelect: document.getElementById("dailyPlanSelect"),
+    trackFilters: document.getElementById("trackFilters"),
+    progressSummary: document.getElementById("progressSummary"),
+    dailyTaskList: document.getElementById("dailyTaskList"),
+    trackProgress: document.getElementById("trackProgress"),
+    milestoneList: document.getElementById("milestoneList"),
+    saveReflection: document.getElementById("saveReflection"),
+    exportProgress: document.getElementById("exportProgress"),
+    reflectionDone: document.getElementById("reflectionDone"),
+    reflectionBlockers: document.getElementById("reflectionBlockers"),
+    reflectionNext: document.getElementById("reflectionNext")
+  };
   const fields = {
     title: document.getElementById("postTitle"),
     date: document.getElementById("postDate"),
@@ -39,6 +59,28 @@
       }
     }
     return normalizePosts(window.BLOG_POSTS || []);
+  }
+
+  function loadTaskState() {
+    const saved = localStorage.getItem(taskStateKey);
+    if (!saved) return {};
+    try {
+      return JSON.parse(saved) || {};
+    } catch (error) {
+      console.warn("Failed to load task state", error);
+      return {};
+    }
+  }
+
+  function loadReflections() {
+    const saved = localStorage.getItem(reflectionKey);
+    if (!saved) return {};
+    try {
+      return JSON.parse(saved) || {};
+    } catch (error) {
+      console.warn("Failed to load reflections", error);
+      return {};
+    }
   }
 
   function normalizePosts(input) {
@@ -66,17 +108,250 @@
     document.getElementById("savePost").addEventListener("click", savePost);
     document.getElementById("exportPosts").addEventListener("click", exportPosts);
     document.getElementById("importPosts").addEventListener("click", importPosts);
+    if (progressEls.dailyPlanSelect) {
+      progressEls.dailyPlanSelect.addEventListener("change", () => {
+        cacheCurrentReflection();
+        selectedPlanDate = progressEls.dailyPlanSelect.value;
+        renderProgressDashboard();
+      });
+    }
+    if (progressEls.saveReflection) {
+      progressEls.saveReflection.addEventListener("click", () => saveReflection(true));
+    }
+    if (progressEls.exportProgress) {
+      progressEls.exportProgress.addEventListener("click", exportProgressState);
+    }
   }
 
   function render() {
     renderProfile();
     renderMetrics();
+    renderProgressDashboard();
     renderResume();
     renderResearch();
     renderResources();
     renderTags();
     renderPosts();
     renderReader(posts[0]);
+  }
+
+  function renderProgressDashboard() {
+    if (!progressEls.dailyTaskList || !progressBoard.dailyPlans?.length) return;
+
+    const plans = progressBoard.dailyPlans;
+    const currentPlan = plans.find((plan) => plan.date === selectedPlanDate) || plans[0];
+    selectedPlanDate = currentPlan.date;
+
+    progressEls.dailyPlanSelect.innerHTML = plans.map((plan) => `
+      <option value="${escapeAttr(plan.date)}" ${plan.date === selectedPlanDate ? "selected" : ""}>
+        ${escapeHtml(plan.date)} · ${escapeHtml(plan.title)}
+      </option>
+    `).join("");
+
+    renderTrackFilters();
+    renderProgressSummary(currentPlan);
+    renderDailyTasks(currentPlan);
+    renderTrackProgress();
+    renderMilestones();
+    fillReflection(currentPlan.date);
+  }
+
+  function renderTrackFilters() {
+    const tracks = [{ id: "全部", label: "全部方向" }, ...(progressBoard.tracks || [])];
+    progressEls.trackFilters.innerHTML = tracks.map((track) => `
+      <button class="tag-button ${track.id === activeProgressTrack ? "is-active" : ""}" type="button" data-track="${escapeAttr(track.id)}">
+        ${escapeHtml(track.label)}
+      </button>
+    `).join("");
+    progressEls.trackFilters.querySelectorAll("button").forEach((button) => {
+      button.addEventListener("click", () => {
+        cacheCurrentReflection();
+        activeProgressTrack = button.dataset.track;
+        renderProgressDashboard();
+      });
+    });
+  }
+
+  function renderProgressSummary(currentPlan) {
+    const allTasks = getAllTasks();
+    const dailyTasks = currentPlan.tasks || [];
+    const totalDone = allTasks.filter((task) => taskState[task.id]).length;
+    const dailyDone = dailyTasks.filter((task) => taskState[task.id]).length;
+    const nextMilestone = getNextMilestone();
+    const selectedTrack = activeProgressTrack === "全部" ? "全部方向" : getTrack(activeProgressTrack)?.label || activeProgressTrack;
+
+    progressEls.progressSummary.innerHTML = [
+      { value: `${dailyDone}/${dailyTasks.length}`, label: "今日完成" },
+      { value: `${totalDone}/${allTasks.length}`, label: "计划总进度" },
+      { value: selectedTrack, label: "当前筛选" },
+      { value: nextMilestone ? formatDate(nextMilestone.date) : "完成", label: nextMilestone ? nextMilestone.title : "全部里程碑" }
+    ].map((item) => `
+      <div class="progress-stat">
+        <strong>${escapeHtml(item.value)}</strong>
+        <span>${escapeHtml(item.label)}</span>
+      </div>
+    `).join("");
+  }
+
+  function renderDailyTasks(currentPlan) {
+    const tasks = (currentPlan.tasks || []).filter((task) => activeProgressTrack === "全部" || task.track === activeProgressTrack);
+    progressEls.dailyTaskList.innerHTML = `
+      <div class="task-day-head">
+        <div>
+          <p class="eyebrow">${escapeHtml(currentPlan.date)}</p>
+          <h3>${escapeHtml(currentPlan.title)}</h3>
+          <p>${escapeHtml(currentPlan.focus || "")}</p>
+        </div>
+        <span>${escapeHtml(tasks.length)} 项</span>
+      </div>
+      ${tasks.map((task) => {
+        const track = getTrack(task.track);
+        const done = Boolean(taskState[task.id]);
+        return `
+          <label class="task-item ${done ? "is-done" : ""}">
+            <input type="checkbox" data-task-id="${escapeAttr(task.id)}" ${done ? "checked" : ""}>
+            <span class="task-body">
+              <span class="task-line">
+                <strong>${escapeHtml(task.title)}</strong>
+                <span class="task-meta">
+                  <span>${escapeHtml(track?.label || task.track)}</span>
+                  <span>${escapeHtml(task.priority || "P1")}</span>
+                </span>
+              </span>
+              <span class="task-detail">${escapeHtml(task.detail || "")}</span>
+            </span>
+          </label>
+        `;
+      }).join("")}
+    `;
+
+    progressEls.dailyTaskList.querySelectorAll("input[type='checkbox']").forEach((checkbox) => {
+      checkbox.addEventListener("change", () => {
+        cacheCurrentReflection();
+        taskState[checkbox.dataset.taskId] = checkbox.checked;
+        persistTaskState();
+        renderProgressDashboard();
+      });
+    });
+  }
+
+  function renderTrackProgress() {
+    const allTasks = getAllTasks();
+    progressEls.trackProgress.innerHTML = (progressBoard.tracks || []).map((track) => {
+      const tasks = allTasks.filter((task) => task.track === track.id);
+      const done = tasks.filter((task) => taskState[task.id]).length;
+      const percent = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
+      return `
+        <div class="track-progress-item">
+          <div class="track-progress-head">
+            <span>${escapeHtml(track.label)}</span>
+            <strong>${done}/${tasks.length}</strong>
+          </div>
+          <div class="progress-bar" aria-label="${escapeAttr(track.label)}完成度">
+            <span style="width: ${percent}%"></span>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderMilestones() {
+    const today = new Date();
+    progressEls.milestoneList.innerHTML = (progressBoard.milestones || []).map((item) => {
+      const isPast = new Date(`${item.date}T00:00:00`) < new Date(today.toDateString());
+      return `
+        <article class="milestone-item ${isPast ? "is-past" : ""}">
+          <time>${escapeHtml(formatDate(item.date))}</time>
+          <h4>${escapeHtml(item.title)}</h4>
+          <p>${escapeHtml(item.detail)}</p>
+        </article>
+      `;
+    }).join("");
+  }
+
+  function fillReflection(date) {
+    const current = reflections[date] || {};
+    progressEls.reflectionDone.value = current.done || "";
+    progressEls.reflectionBlockers.value = current.blockers || "";
+    progressEls.reflectionNext.value = current.next || "";
+  }
+
+  function cacheCurrentReflection() {
+    if (!selectedPlanDate || !progressEls.reflectionDone) return;
+    reflections[selectedPlanDate] = {
+      done: progressEls.reflectionDone.value.trim(),
+      blockers: progressEls.reflectionBlockers.value.trim(),
+      next: progressEls.reflectionNext.value.trim(),
+      updatedAt: new Date().toISOString()
+    };
+    persistReflections();
+  }
+
+  function saveReflection(showFeedback) {
+    cacheCurrentReflection();
+    if (!showFeedback || !progressEls.saveReflection) return;
+    const oldText = progressEls.saveReflection.textContent;
+    progressEls.saveReflection.textContent = "已保存";
+    window.setTimeout(() => {
+      progressEls.saveReflection.textContent = oldText;
+    }, 1200);
+  }
+
+  function exportProgressState() {
+    cacheCurrentReflection();
+    const allTasks = getAllTasks();
+    const completed = allTasks.filter((task) => taskState[task.id]).map((task) => task.id);
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      boardLastUpdated: progressBoard.lastUpdated || "",
+      completed,
+      taskState,
+      reflections
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `progress-${getLocalDateString()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function getAllTasks() {
+    return (progressBoard.dailyPlans || []).flatMap((plan) => plan.tasks || []);
+  }
+
+  function getTrack(trackId) {
+    return (progressBoard.tracks || []).find((track) => track.id === trackId);
+  }
+
+  function getNextMilestone() {
+    const today = new Date();
+    return (progressBoard.milestones || []).find((item) => new Date(`${item.date}T23:59:59`) >= today);
+  }
+
+  function persistTaskState() {
+    localStorage.setItem(taskStateKey, JSON.stringify(taskState));
+  }
+
+  function persistReflections() {
+    localStorage.setItem(reflectionKey, JSON.stringify(reflections));
+  }
+
+  function resolveInitialPlanDate(plans) {
+    if (!plans.length) return "";
+    const today = getLocalDateString();
+    if (plans.some((plan) => plan.date === today)) return today;
+    const pastPlans = plans.filter((plan) => plan.date <= today);
+    return (pastPlans[pastPlans.length - 1] || plans[0]).date;
+  }
+
+  function getLocalDateString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   }
 
   function renderProfile() {

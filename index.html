@@ -15,6 +15,7 @@
       </a>
       <nav class="top-nav" aria-label="主导航">
         <a href="#resume">简历</a>
+        <a href="#progress">训练看板</a>
         <a href="#research">研究方向</a>
         <a href="#posts">学习笔记</a>
         <a href="#resources">资料库</a>
@@ -37,6 +38,7 @@
           <p class="hero-copy" id="profileHeadline">记录 LLM 推理系统、Python 工程和论文阅读中的学习过程。</p>
           <div class="hero-actions">
             <a class="primary-button" href="https://github.com/Futuresxy" target="_blank" rel="noreferrer">GitHub 主页</a>
+            <a class="secondary-button" href="#progress">查看今日计划</a>
             <a class="secondary-button" href="#resume">查看简历</a>
             <a class="secondary-button" href="https://futuresxy.github.io/paper-daily/" target="_blank" rel="noreferrer">Paper Daily</a>
           </div>
@@ -45,6 +47,67 @@
 
       <section class="overview-band">
         <div class="metric-row" id="metricRow"></div>
+      </section>
+
+      <section class="content-band progress-section" id="progress">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Daily Execution</p>
+            <h2>秋招与 ASPLOS 训练看板</h2>
+          </div>
+          <div class="progress-actions">
+            <button class="secondary-button" id="saveReflection" type="button">保存今日反馈</button>
+            <button class="primary-button" id="exportProgress" type="button">导出状态</button>
+          </div>
+        </div>
+
+        <div class="progress-toolbar">
+          <label class="progress-select">
+            <span>日期</span>
+            <select id="dailyPlanSelect" aria-label="选择每日计划"></select>
+          </label>
+          <div class="track-filters" id="trackFilters" aria-label="任务方向筛选"></div>
+        </div>
+
+        <div class="progress-summary" id="progressSummary"></div>
+
+        <div class="progress-layout">
+          <div class="task-column">
+            <div class="task-list" id="dailyTaskList"></div>
+          </div>
+          <aside class="progress-side" aria-label="项目进度概览">
+            <section class="progress-card">
+              <h3>方向进度</h3>
+              <div class="track-progress" id="trackProgress"></div>
+            </section>
+            <section class="progress-card">
+              <h3>阶段里程碑</h3>
+              <div class="milestone-list" id="milestoneList"></div>
+            </section>
+          </aside>
+        </div>
+
+        <section class="reflection-panel">
+          <div>
+            <p class="eyebrow">Daily Review</p>
+            <h3>每日反馈与学习心得</h3>
+            <p>这里的反馈会先保存在当前浏览器。需要发布到 GitHub Pages 时，点击“导出状态”，再把关键内容整理进学习笔记或任务数据。</p>
+          </div>
+          <div class="reflection-grid">
+            <label>
+              <span>今日完成</span>
+              <textarea id="reflectionDone" rows="4" placeholder="实际完成了哪些任务、产出了什么文件或实验结果"></textarea>
+            </label>
+            <label>
+              <span>卡点问题</span>
+              <textarea id="reflectionBlockers" rows="4" placeholder="记录环境、算法、论文理解、实验平台等问题"></textarea>
+            </label>
+            <label>
+              <span>明日调整</span>
+              <textarea id="reflectionNext" rows="4" placeholder="根据今天反馈调整明天任务"></textarea>
+            </label>
+          </div>
+        </section>
       </section>
 
       <section class="content-band profile-section" id="profile">
@@ -184,6 +247,7 @@
     </footer>
 
     <script src="./posts.js"></script>
+    <script src="./tasks.js"></script>
     <script src="./app.js"></script>
   </body>
 </html>
